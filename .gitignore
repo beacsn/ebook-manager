@@ -1,0 +1,18 @@
+# Python
+__pycache__/
+*.pyc
+
+# Virtual environment
+.venv/
+
+# Streamlit cache
+.streamlit/
+
+# Tu cache local
+cache/
+
+# VS Code
+.vscode/
+
+# Windows
+Thumbs.db
