@@ -4,6 +4,16 @@ from PIL import Image
 
 from io import BytesIO
 
+from pathlib import Path
+import hashlib
+import re
+
+COVERS_DIR = Path("cache/covers")
+
+COVERS_DIR.mkdir(
+    parents=True,
+    exist_ok=True
+)
 
 # =========================================================
 # VALIDAR IMAGEN
@@ -32,6 +42,14 @@ def imagen_valida(contenido):
 
 def extraer_portada_epub(ruta_epub):
 
+    ruta_cache = generar_nombre_cache(
+        ruta_epub
+    )
+
+    if ruta_cache.exists():
+
+        return str(ruta_cache)
+
     try:
 
         book = epub.read_epub(
@@ -55,7 +73,11 @@ def extraer_portada_epub(ruta_epub):
 
                 if imagen_valida(contenido):
 
-                    return contenido
+                    with open(ruta_cache, "wb") as f:
+
+                        f.write(contenido)
+
+                    return str(ruta_cache)
 
         # =================================================
         # 2. FALLBACK
@@ -71,7 +93,12 @@ def extraer_portada_epub(ruta_epub):
 
                 if imagen_valida(contenido):
 
-                    return contenido
+                    # return contenido
+                    with open(ruta_cache, "wb") as f:
+
+                        f.write(contenido)
+
+                    return str(ruta_cache)
 
     except Exception:
 
@@ -144,10 +171,43 @@ def extraer_metadata_epub(ruta_epub):
 
         if descripcion:
 
-            metadata["descripcion"] = descripcion[0][0]
+            metadata["descripcion"] = limpiar_html(
+                descripcion[0][0]
+            )
 
         return metadata
 
     except Exception:
 
         return {}
+    
+
+
+
+def generar_nombre_cache(ruta_epub):
+
+    hash_nombre = hashlib.md5(
+        str(ruta_epub).encode()
+    ).hexdigest()
+
+    return COVERS_DIR / f"{hash_nombre}.jpg"
+
+
+def limpiar_html(texto):
+
+    if not texto:
+
+        return ""
+
+    texto = re.sub(
+        r"<.*?>",
+        "",
+        texto
+    )
+
+    texto = texto.replace(
+        "\n",
+        " "
+    )
+
+    return texto.strip()

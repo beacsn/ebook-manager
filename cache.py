@@ -10,11 +10,13 @@ CACHE_DIR = Path("cache")
 CACHE_PATH = CACHE_DIR / "libros.json"
 
 
+# =========================================================
+# GUARDAR CACHE
+# =========================================================
+
 def guardar_cache(libros):
+
     print("Entrando en guardar_cache")
-    # -----------------------------------------------------
-    # Crear carpeta cache si no existe
-    # -----------------------------------------------------
 
     CACHE_DIR.mkdir(
         parents=True,
@@ -23,18 +25,33 @@ def guardar_cache(libros):
 
     datos = []
 
+    contador = 0
+
     for libro in libros:
+
         contador += 1
 
         if contador % 100 == 0:
+
             print(f"{contador} libros...")
+
         datos.append({
+
             "titulo": libro.titulo,
+
             "autor": libro.autor,
+
             "ruta": str(libro.ruta),
-            "formato": libro.formato
+
+            "formato": libro.formato,
+
+            "descripcion": libro.descripcion,
+
+            "idioma": libro.idioma
         })
+
     print(CACHE_PATH)
+
     with open(
         CACHE_PATH,
         "w",
@@ -47,12 +64,18 @@ def guardar_cache(libros):
             ensure_ascii=False,
             indent=4
         )
-        print("Cache guardada correctamente")
 
+    print("Cache guardada correctamente")
+
+
+# =========================================================
+# CARGAR CACHE
+# =========================================================
 
 def cargar_cache():
 
     if not CACHE_PATH.exists():
+
         return None
 
     try:
@@ -67,10 +90,6 @@ def cargar_cache():
 
     except Exception:
 
-        # ---------------------------------------------
-        # Cache corrupta
-        # ---------------------------------------------
-
         return None
 
     libros = []
@@ -78,10 +97,38 @@ def cargar_cache():
     for item in datos:
 
         libro = Libro(
-            titulo=item["titulo"],
-            autor=item["autor"],
-            ruta=Path(item["ruta"]),
-            formato=item["formato"]
+
+            titulo=item.get(
+                "titulo",
+                ""
+            ),
+
+            autor=item.get(
+                "autor",
+                ""
+            ),
+
+            ruta=Path(
+                item.get(
+                    "ruta",
+                    ""
+                )
+            ),
+
+            formato=item.get(
+                "formato",
+                ""
+            ),
+
+            descripcion=item.get(
+                "descripcion",
+                ""
+            ),
+
+            idioma=item.get(
+                "idioma",
+                ""
+            )
         )
 
         libros.append(libro)
