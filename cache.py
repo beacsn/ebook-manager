@@ -31,9 +31,9 @@ def guardar_cache(libros):
 
         contador += 1
 
-        if contador % 100 == 0:
+        #if contador % 100 == 0:
 
-            print(f"{contador} libros...")
+            #print(f"{contador} libros...")
 
         datos.append({
 
@@ -47,7 +47,15 @@ def guardar_cache(libros):
 
             "descripcion": libro.descripcion,
 
-            "idioma": libro.idioma
+            "idioma": libro.idioma,
+
+            "generos": libro.generos,
+
+            "thumbnail": libro.thumbnail,
+
+            "descripcion_google": libro.descripcion_google,
+
+            "enriquecido": libro.enriquecido
         })
 
     print(CACHE_PATH)
@@ -128,6 +136,25 @@ def cargar_cache():
             idioma=item.get(
                 "idioma",
                 ""
+            ),
+            generos=item.get(
+                "generos",
+                []
+            ),
+
+            thumbnail=item.get(
+                "thumbnail",
+                ""
+            ),
+
+            descripcion_google=item.get(
+                "descripcion_google",
+                ""
+            ),
+
+            enriquecido=item.get(
+                "enriquecido",
+                False
             )
         )
 

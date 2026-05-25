@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from dataclasses import field
 
 from pathlib import Path
 
@@ -19,3 +20,17 @@ class Libro:
     idioma: str = ""
 
     isbn: str = ""
+
+    # =====================================================
+    # GOOGLE BOOKS
+    # =====================================================
+
+    generos: list[str] = field(
+        default_factory=list
+    )
+
+    thumbnail: str = ""
+
+    descripcion_google: str = ""
+
+    enriquecido: bool = False

@@ -4,12 +4,14 @@ import json
 import html
 import math
 
+
 from scanner import escanear_biblioteca
 from metadata import extraer_portada_epub
 from cache import (
     cargar_cache,
     guardar_cache
 )
+from openlibrary import buscar_openlibrary
 
 
 # =========================================================
@@ -55,7 +57,6 @@ def refrescar_biblioteca():
         st.cache_data.clear()
 
 
-@st.cache_data
 def cargar_libros():
 
     print("Cargando libros...")
@@ -96,6 +97,76 @@ if st.sidebar.button(
     )
 
     st.rerun()
+
+if st.sidebar.button(
+    "📡 Enriquecer libros"
+):
+
+    MAX_ENRIQUECER = 500
+    contador = 0
+    procesados = 0
+
+    progreso = st.progress(0)
+
+    total = len(libros)
+
+    for libro in libros:
+
+        # -------------------------------------------------
+        # YA ENRIQUECIDO
+        # -------------------------------------------------
+
+        if libro.enriquecido:
+            continue
+
+        print(
+            f"Enriqueciendo: {libro.titulo}"
+        )
+
+        resultado = buscar_openlibrary(
+            libro.titulo,
+            libro.autor
+        )
+
+        if resultado:
+
+            libro.generos = resultado[
+                "generos"
+            ]
+
+            libro.descripcion_google = resultado[
+                "descripcion_google"
+            ]
+
+            libro.thumbnail = resultado[
+                "thumbnail"
+            ]
+
+        libro.enriquecido = True
+
+        procesados += 1
+
+        # -------------------------------------------------
+        # GUARDADO INCREMENTAL
+        # -------------------------------------------------
+
+        guardar_cache(libros)
+
+        # -------------------------------------------------
+        # LÍMITE
+        # -------------------------------------------------
+
+        if procesados >= MAX_ENRIQUECER:
+
+            break
+
+
+    st.success(
+        "Enriquecimiento completado"
+    )
+
+    st.rerun()
+
 
 # ---------------------------------------------------------
 # FILTRO LETRA
@@ -287,20 +358,141 @@ for indice, libro in enumerate(
             unsafe_allow_html=True
         )
 
-        st.caption(libro.formato)
+        #st.caption(libro.formato)
+
+        col1, col2 = st.columns(2)
+
+        with col1:
+
+            st.caption(libro.formato)
+
+        with col2:
+
+            if libro.enriquecido:
+
+                st.caption("✅")
+
+            else:
+
+                st.caption("🟡")
 
 
-        if st.button(
-            "Abrir",
-            key=str(libro.ruta)
-        ):
-            os.startfile(libro.ruta)
+        col_btn1, col_btn2 = st.columns(2)
+
+        # -------------------------------------------------
+        # ABRIR
+        # -------------------------------------------------
+
+        with col_btn1:
+
+            if st.button(
+                "Abrir",
+                key=f"abrir_{libro.ruta}"
+            ):
+
+                os.startfile(libro.ruta)
+
+        # -------------------------------------------------
+        # ENRIQUECER
+        # -------------------------------------------------
+
+        with col_btn2:
+
+            if st.button(
+                "📡",
+                key=f"enriquecer_{libro.ruta}"
+            ):
+
+                resultado = buscar_openlibrary(
+                    libro.titulo,
+                    libro.autor
+                )
+
+                if resultado:
+
+                    libro.generos = resultado[
+                        "generos"
+                    ]
+
+                    libro.descripcion_google = resultado[
+                        "descripcion_google"
+                    ]
+
+                    libro.thumbnail = resultado[
+                        "thumbnail"
+                    ]
+
+                    libro.enriquecido = True
+
+                    guardar_cache(libros)
+
+                    st.success(
+                        "Libro enriquecido"
+                    )
+
+                    st.rerun()
+
+                else:
+
+                    st.warning(
+                        "No encontrado"
+                    )
 
         with st.expander("Detalles"):
 
-            st.write(libro.descripcion)
+            # -------------------------------------------------
+            # DESCRIPCIÓN EPUB
+            # -------------------------------------------------
 
-            st.write(f"Idioma: {libro.idioma}")
+            if libro.descripcion:
+
+                st.write(libro.descripcion)
+
+            # -------------------------------------------------
+            # DESCRIPCIÓN OPENLIBRARY
+            # -------------------------------------------------
+
+            elif libro.descripcion_google:
+
+                st.write(libro.descripcion_google)
+
+            # -------------------------------------------------
+            # IDIOMA
+            # -------------------------------------------------
+
+            if libro.idioma:
+
+                st.write(
+                    f"🌍 Idioma: {libro.idioma}"
+                )
+
+            # -------------------------------------------------
+            # GÉNEROS
+            # -------------------------------------------------
+
+            if libro.generos:
+
+                st.write("🎭 Géneros:")
+
+                st.write(
+                    ", ".join(libro.generos)
+                )
+
+            # -------------------------------------------------
+            # ESTADO
+            # -------------------------------------------------
+
+            if libro.enriquecido:
+
+                st.success(
+                    "Libro enriquecido"
+                )
+
+            else:
+
+                st.warning(
+                    "Pendiente de enriquecer"
+                )
 
 
 # =========================================================
